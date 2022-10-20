@@ -1,6 +1,6 @@
 {
   "name": "@brightsquid/react-oauth2-pkce",
-  "version": "2.0.13",
+  "version": "2.0.14",
   "description": "Authenticate against generic OAuth2 using PKCE",
   "author": "Akash Gupta <akash@brightsquid.com>",
   "license": "MIT",
@@ -41,6 +41,7 @@
     "@testing-library/user-event": "^7.2.1",
     "@types/jest": "^25.1.4",
     "@types/jwt-decode": "^2.2.1",
+    "@types/milliseconds": "^0.0.30",
     "@types/mocha": "^8.0.1",
     "@types/node": "^12.12.38",
     "@types/react": "^16.9.27",
@@ -78,7 +79,8 @@
     "dist"
   ],
   "dependencies": {
-    "jwt-decode": "^2.2.0"
+    "jwt-decode": "^2.2.0",
+    "milliseconds": "^1.0.3"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
