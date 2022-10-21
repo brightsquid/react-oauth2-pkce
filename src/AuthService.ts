@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/camelcase */
 import { createPKCECodes, PKCECodePair } from './pkce'
 import { toUrlEncoded } from './util'
+import ms from 'milliseconds'
 
 import jwtDecode from 'jwt-decode'
 
@@ -130,6 +131,15 @@ export class AuthService<TIDToken = JWTIDToken> {
     const now = new Date().getTime()
     auth.expires_at = now + (auth.expires_in + refreshSlack) * 1000
     window.localStorage.setItem('auth', JSON.stringify(auth))
+
+    if (auth.access_token) {
+      const token = auth.access_token
+      const decodedToken = jwtDecode(token) as any
+      if (decodedToken?.iat) {
+        const offset = Date.now() - ms.seconds(decodedToken.iat)
+        localStorage.setItem('offset', offset.toString())
+      }
+    }
   }
 
   getAuthTokens(): AuthTokens {
@@ -151,14 +161,16 @@ export class AuthService<TIDToken = JWTIDToken> {
     this.removeItem('pkce')
     this.removeItem('auth')
     if (shouldEndSession) {
-      const { clientId, provider, logoutEndpoint, redirectUri } = this.props;
+      const { clientId, provider, logoutEndpoint, redirectUri } = this.props
       const query = {
         client_id: clientId,
         post_logout_redirect_uri: redirectUri
       }
-      const url = `${logoutEndpoint || `${provider}/logout`}?${toUrlEncoded(query)}`
+      const url = `${logoutEndpoint || `${provider}/logout`}?${toUrlEncoded(
+        query
+      )}`
       window.location.replace(url)
-      return true;
+      return true
     } else {
       window.location.reload()
       return true
@@ -171,7 +183,14 @@ export class AuthService<TIDToken = JWTIDToken> {
 
   // this will do a full page reload and to to the OAuth2 provider's login page and then redirect back to redirectUri
   authorize(): boolean {
-    const { clientId, provider, authorizeEndpoint, redirectUri, scopes, audience } = this.props
+    const {
+      clientId,
+      provider,
+      authorizeEndpoint,
+      redirectUri,
+      scopes,
+      audience
+    } = this.props
 
     const pkce = createPKCECodes()
     window.localStorage.setItem('pkce', JSON.stringify(pkce))
@@ -189,7 +208,9 @@ export class AuthService<TIDToken = JWTIDToken> {
       codeChallengeMethod: 'S256'
     }
     // Responds with a 302 redirect
-    const url = `${authorizeEndpoint || `${provider}/authorize`}?${toUrlEncoded(query)}`
+    const url = `${authorizeEndpoint || `${provider}/authorize`}?${toUrlEncoded(
+      query
+    )}`
     window.location.replace(url)
     return true
   }
@@ -237,7 +258,7 @@ export class AuthService<TIDToken = JWTIDToken> {
       body: toUrlEncoded(payload)
     })
     this.removeItem('pkce')
-    let json = await response.json()
+    const json = await response.json()
     if (isRefresh && !json.refresh_token) {
       json.refresh_token = payload.refresh_token
     }
@@ -245,6 +266,7 @@ export class AuthService<TIDToken = JWTIDToken> {
     if (autoRefresh) {
       this.startTimer()
     }
+
     return this.getAuthTokens()
   }
 
